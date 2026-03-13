@@ -13,6 +13,7 @@ export type AuthState = {
   loading: boolean;
   error: string | null;
   calendarAccessToken: string | null;
+  isGuest: boolean;
 };
 
 const getInitialToken = () => {
@@ -22,11 +23,19 @@ const getInitialToken = () => {
   return null;
 };
 
+const getInitialGuestStatus = () => {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("isGuestMode") === "true";
+  }
+  return false;
+};
+
 export const $authStore = map<AuthState>({
   user: null,
   loading: true,
   error: null,
   calendarAccessToken: getInitialToken(),
+  isGuest: getInitialGuestStatus(),
 });
 
 // Setup Google Provider with Calendar scopes for events
@@ -47,6 +56,8 @@ export const loginWithGoogle = async () => {
       $authStore.setKey("calendarAccessToken", credential.accessToken);
       localStorage.setItem("calendarAccessToken", credential.accessToken);
     }
+    $authStore.setKey("isGuest", false);
+    localStorage.removeItem("isGuestMode");
     $authStore.setKey("user", result.user);
   } catch (error: any) {
     console.error("Login failed", error);
@@ -59,6 +70,12 @@ export const loginWithGoogle = async () => {
   }
 };
 
+export const continueAsGuest = () => {
+  $authStore.setKey("isGuest", true);
+  localStorage.setItem("isGuestMode", "true");
+  $authStore.setKey("loading", false);
+};
+
 export const logout = async () => {
   try {
     await signOut(auth);
@@ -67,8 +84,10 @@ export const logout = async () => {
       loading: false,
       error: null,
       calendarAccessToken: null,
+      isGuest: false,
     });
     localStorage.removeItem("calendarAccessToken");
+    localStorage.removeItem("isGuestMode");
   } catch (error: any) {
     console.error("Logout failed", error);
   }
@@ -79,9 +98,15 @@ if (typeof window !== "undefined") {
   onAuthStateChanged(auth, (user) => {
     $authStore.setKey("user", user);
     $authStore.setKey("loading", false);
-    if (!user) {
-       $authStore.setKey("calendarAccessToken", null);
-       localStorage.removeItem("calendarAccessToken");
+    if (user) {
+      $authStore.setKey("isGuest", false);
+      localStorage.removeItem("isGuestMode");
+    } else {
+       // Only clear if not in guest mode
+       if (!$authStore.get().isGuest) {
+         $authStore.setKey("calendarAccessToken", null);
+         localStorage.removeItem("calendarAccessToken");
+       }
     }
   });
 }

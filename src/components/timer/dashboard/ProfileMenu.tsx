@@ -13,6 +13,7 @@ interface ProfileMenuProps {
   tickEnabled: boolean;
   volume: number;
   logout: () => void;
+  isGuest?: boolean;
 }
 
 export const ProfileMenu: React.FC<ProfileMenuProps> = ({
@@ -28,6 +29,7 @@ export const ProfileMenu: React.FC<ProfileMenuProps> = ({
   tickEnabled,
   volume,
   logout,
+  isGuest = false,
 }) => {
   const profileRef = useRef<HTMLDivElement>(null);
 
@@ -55,15 +57,21 @@ export const ProfileMenu: React.FC<ProfileMenuProps> = ({
         <button
           onClick={() => setIsProfileOpen(!isProfileOpen)}
           className="flex items-center gap-3 bg-black/10 backdrop-blur-md p-1.5 rounded-full border border-white/10 hover:bg-black/20 transition-all shadow-lg overflow-hidden group">
-          <img
-            src={user.photoURL || ""}
-            alt="Profile"
-            referrerPolicy="no-referrer"
-            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-white/20 group-hover:border-white/50 transition-all object-cover"
-          />
+          {isGuest ? (
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-white/20 flex items-center justify-center bg-white/5 group-hover:border-white/50 transition-all">
+              <span className="text-white/40 text-xs">?</span>
+            </div>
+          ) : (
+            <img
+              src={user?.photoURL || ""}
+              alt="Profile"
+              referrerPolicy="no-referrer"
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-white/20 group-hover:border-white/50 transition-all object-cover"
+            />
+          )}
           <div className="flex flex-col items-start -translate-y-px pr-2">
             <h3 className="font-bold text-[10px] sm:text-xs leading-tight text-white">
-              {user.displayName}
+              {isGuest ? "Guest Mode" : user?.displayName}
             </h3>
           </div>
         </button>
@@ -77,9 +85,10 @@ export const ProfileMenu: React.FC<ProfileMenuProps> = ({
                 </span>
                 <input
                   type="checkbox"
+                  disabled={isGuest}
                   checked={isAutoMode}
                   onChange={handleToggleAutoSync}
-                  className="w-4 h-4 rounded border-white/30 bg-white/10 text-blue-500 focus:ring-0 cursor-pointer"
+                  className={`w-4 h-4 rounded border-white/30 bg-white/10 text-blue-500 focus:ring-0 cursor-pointer ${isGuest ? "opacity-30 cursor-not-allowed" : ""}`}
                 />
               </label>
 
@@ -166,11 +175,21 @@ export const ProfileMenu: React.FC<ProfileMenuProps> = ({
                 )}
               </div>
             </div>
+            {isGuest && (
+              <button
+                onClick={() => import("../../../stores/authStore").then(m => m.loginWithGoogle())}
+                className="w-full flex items-center justify-between p-4 border-t border-white/10 hover:bg-white/10 text-blue-400 transition-colors group">
+                <span className="text-sm font-bold tracking-tight">Sign in with Google</span>
+                <svg className="w-4 h-4 text-blue-400/50 group-hover:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
+            )}
             <button
               onClick={logout}
-              className="w-full flex items-center justify-between p-4 hover:bg-white/10 text-white transition-colors group">
+              className={`w-full flex items-center justify-between p-4 hover:bg-white/10 text-white transition-colors group ${!isGuest ? "border-t border-white/10" : ""}`}>
               <span className="text-sm font-bold tracking-tight">
-                Sign out
+                {isGuest ? "Exit Guest Mode" : "Sign out"}
               </span>
               <svg
                 className="w-4 h-4 text-white/30 group-hover:text-white"
