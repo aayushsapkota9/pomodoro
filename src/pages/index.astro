@@ -1,0 +1,38 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Container from "@/components/container.astro";
+import { TimerApp } from "@/components/timer/TimerApp";
+import { StatsDashboard } from "@/components/dashboard/StatsDashboard";
+import { LoginButton } from "@/components/auth/LoginButton";
+---
+
+<Layout title="Pomodoro Calendar">
+  <Container>
+    <div class="min-h-[80vh] flex flex-col pt-10 pb-20 gap-10">
+      
+      {/* Header Area */}
+      <header class="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+        <div class="flex items-center gap-3">
+            <span class="text-3xl">🍅</span>
+            <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-500">
+            Pomodoro Sync
+            </h1>
+        </div>
+        
+        <LoginButton client:only="react" />
+      </header>
+
+      {/* Main Timer Area */}
+      <main class="w-full flex justify-center">
+        <TimerApp client:only="react" />
+      </main>
+
+      {/* Stats Dashboard Area */}
+      <section class="mt-8">
+        <h2 class="text-2xl font-semibold mb-6 text-gray-800">Your Stats</h2>
+        <StatsDashboard client:only="react" />
+      </section>
+      
+    </div>
+  </Container>
+</Layout>
