@@ -11,5 +11,8 @@ export default defineConfig({
   integrations: [mdx(), sitemap(), icon(), react()],
   vite: {
     plugins: [tailwindcss()],
+    server: {
+      allowedHosts: ["kyong-unpugnacious-shawnna.ngrok-free.dev"],
+    },
   },
 });

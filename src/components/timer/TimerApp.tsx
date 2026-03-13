@@ -12,7 +12,7 @@ import { $authStore } from "../../stores/authStore";
 import { fetchTodayEvents, getActiveEvent } from "../../lib/calendar";
 
 export const TimerApp: React.FC = () => {
-  const { mode, timeLeft, isActive, showPresenceCheck, presenceCheckTimeout } =
+  const { mode, timeLeft, isActive, showPresenceCheck, presenceCheckTimeout, isAutoMode } =
     useStore($timerStore);
   const { calendarAccessToken } = useStore($authStore);
 
@@ -40,38 +40,53 @@ export const TimerApp: React.FC = () => {
 
   return (
     <div
-      className="relative w-full flex flex-col items-center justify-center"
+      className="relative w-full max-w-screen-sm mx-auto flex flex-col items-center justify-center px-4"
     >
-      <div className="text-white text-center">
-        <h2 className="text-3xl sm:text-4xl font-semibold mb-4 opacity-90 tracking-wide uppercase">
+      <div className="text-white text-center w-full">
+        <h2 className="text-xl sm:text-4xl font-black mb-2 sm:mb-4 opacity-40 tracking-[0.4em] uppercase">
           {mode === "focus" || mode === "idle" ? "Focus" : "Relax"}
         </h2>
-        <div className="font-mono text-8xl sm:text-9xl font-bold tracking-tight mb-12 drop-shadow-md">
+        <div className="font-mono text-7xl sm:text-8xl lg:text-9xl font-black tracking-tighter mb-8 sm:mb-12 drop-shadow-2xl tabular-nums">
           {formatTime(timeLeft)}
         </div>
         
-        <div className="flex justify-center gap-6">
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6">
           {!isActive ? (
             <button
               onClick={startTimer}
-              className="px-12 py-5 bg-white text-gray-900 rounded-full font-extrabold text-2xl hover:scale-105 transition-transform shadow-xl"
+              disabled={isAutoMode}
+              className={`w-full sm:w-auto px-10 sm:px-12 py-4 sm:py-5 rounded-full font-black text-xl sm:text-2xl transition-all shadow-xl active:scale-95 ${
+                isAutoMode 
+                  ? "bg-white/5 text-white/30 cursor-not-allowed border border-white/10" 
+                  : "bg-white text-gray-900 hover:scale-105"
+              }`}
             >
-              Start
+              {isAutoMode ? "System Sync" : "Start Timer"}
             </button>
           ) : (
             <button
               onClick={pauseTimer}
-              className="px-12 py-5 bg-white/20 hover:bg-white/30 text-white rounded-full font-extrabold text-2xl transition-colors backdrop-blur-sm shadow-xl"
+              disabled={isAutoMode}
+              className={`w-full sm:w-auto px-10 sm:px-12 py-4 sm:py-5 rounded-full font-black text-xl sm:text-2xl transition-all backdrop-blur-md shadow-xl active:scale-95 ${
+                isAutoMode 
+                  ? "bg-white/5 text-white/30 cursor-not-allowed border border-white/10" 
+                  : "bg-white/20 hover:bg-white/30 text-white ring-1 ring-white/20"
+              }`}
             >
-              Pause
+              {isAutoMode ? "Auto Running" : "Pause Focus"}
             </button>
           )}
 
           <button
             onClick={stopTimer}
-            className="px-8 py-4 bg-transparent border-2 border-white/50 hover:border-white text-white rounded-full font-bold text-lg transition-colors"
+            disabled={isAutoMode && isActive}
+            className={`w-full sm:w-auto px-8 py-3 sm:py-4 bg-transparent border-2 rounded-full font-black text-base sm:text-lg transition-all active:scale-95 ${
+              isAutoMode && isActive
+                ? "border-white/10 text-white/20 cursor-not-allowed"
+                : "border-white/30 hover:border-white hover:bg-white/5 text-white"
+            }`}
           >
-            Reset
+            Reset session
           </button>
         </div>
       </div>

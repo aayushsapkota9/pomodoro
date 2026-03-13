@@ -26,3 +26,17 @@
     border-color: var(--color-gray-200, currentColor);
   }
 }
+@layer utilities {
+  @keyframes rotate-hand {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .animate-clock-hand {
+    animation: rotate-hand 3s linear infinite;
+  }
+
+  .animate-clock-hand-fast {
+    animation: rotate-hand 1.5s linear infinite;
+  }
+}

@@ -1,62 +1,246 @@
 import React, { useEffect, useState } from "react";
 import { useStore } from "@nanostores/react";
-import { $authStore, loginWithGoogle, logout } from "../../stores/authStore";
+import { $authStore, logout } from "../../stores/authStore";
 import { fetchTodayEvents, type CalendarEvent } from "../../lib/calendar";
 import { TimerApp } from "./TimerApp";
 import { db } from "../../lib/firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
-import { $timerStore } from "../../stores/timerStore";
+import { doc, onSnapshot, setDoc, collection, query, addDoc, deleteDoc, orderBy, serverTimestamp, getDoc } from "firebase/firestore";
+import { 
+  $timerStore, 
+  updateTimerStateLocally, 
+  getIsSyncingFromRemote, 
+  getSessionId, 
+  setServerOffset, 
+  getSyncedNow 
+} from "../../stores/timerStore";
+
+// Refactored Components
+import { type ManualTask } from "./dashboard/types";
+import { BackgroundLayer } from "./dashboard/BackgroundLayer";
+import { ProfileMenu } from "./dashboard/ProfileMenu";
+import { TaskSection } from "./dashboard/TaskSection";
+import { ThemeSettingsModal } from "./dashboard/ThemeSettingsModal";
 
 export const TaskDashboard: React.FC = () => {
-  const { user, calendarAccessToken } = useStore($authStore);
-  const { mode, isAutoMode } = useStore($timerStore);
+  const {
+    user,
+    calendarAccessToken,
+    loading: authLoading,
+  } = useStore($authStore);
+  const { mode, isAutoMode, isActive, themeMode, customFocusBg, customBreakBg, soundEnabled, tickEnabled, volume } = useStore($timerStore);
+  
   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [completedTasks, setCompletedTasks] = useState<Record<string, boolean>>({});
+  const [manualTasks, setManualTasks] = useState<ManualTask[]>([]);
+  const [newTaskText, setNewTaskText] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
 
+  // Sync Google Calendar Events
   useEffect(() => {
     if (calendarAccessToken) {
-      fetchTodayEvents(calendarAccessToken).then((fetchedEvents) => {
-        setEvents(fetchedEvents);
-      });
+      setIsLoading(true);
+      setFetchError(null);
+      fetchTodayEvents(calendarAccessToken)
+        .then((fetchedEvents) => {
+          setEvents(fetchedEvents);
+          setIsLoading(false);
+        })
+        .catch((err) => {
+          console.error("Dashboard: Fetch failed", err);
+          const errorMessage = err.message || "";
+          if (errorMessage.includes("401")) {
+            setFetchError("Session expired. Please reconnect your Google account.");
+            localStorage.removeItem("calendarAccessToken");
+          } else {
+            setFetchError(errorMessage || "Failed to fetch calendar");
+          }
+          setIsLoading(false);
+        });
     }
   }, [calendarAccessToken]);
 
-  // Load completed Tasks from Firestore
+  // Sync Manual Tasks (Firestore)
   useEffect(() => {
-    if (user && events.length > 0) {
-      const today = new Date().toISOString().split("T")[0];
-      const docRef = doc(db, "users", user.uid, "completed_tasks", today);
-      getDoc(docRef).then((docSnap) => {
+    if (user?.uid) {
+      const tasksRef = collection(db, "users", user.uid, "manual_tasks");
+      const q = query(tasksRef, orderBy("createdAt", "desc"));
+      
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const tasks: ManualTask[] = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          tasks.push({
+            id: doc.id,
+            text: data.text,
+            completed: data.completed,
+            createdAt: data.createdAt || Date.now(),
+          });
+        });
+        setManualTasks(tasks);
+      }, (err) => {
+        console.error("Manual Tasks: Sync failed", err);
+      });
+      return () => unsubscribe();
+    }
+  }, [user?.uid]);
+
+  // Clock Calibration (NTP-lite)
+  useEffect(() => {
+    if (user?.uid) {
+      const calibrateSync = async () => {
+        const start = Date.now();
+        const calibrationRef = doc(db, "users", user.uid, "settings", "calibration");
+        await setDoc(calibrationRef, { timestamp: serverTimestamp() });
+        const snap = await getDoc(calibrationRef);
+        if (snap.exists()) {
+          const serverTime = snap.data().timestamp.toMillis();
+          const rtt = Date.now() - start;
+          const offset = (Date.now() - (serverTime + rtt / 2));
+          console.log("Timer Sync: Clock calibrated. Offset (ms):", offset);
+          setServerOffset(offset);
+        }
+      };
+      calibrateSync();
+    }
+  }, [user?.uid]);
+
+  // Sync Timer State across devices (Receiver)
+  useEffect(() => {
+    if (user?.uid) {
+      const timerRef = doc(db, "users", user.uid, "settings", "timer");
+      const unsubscribe = onSnapshot(timerRef, (docSnap) => {
         if (docSnap.exists()) {
-          setCompletedTasks(docSnap.data());
+          const remoteState = docSnap.data();
+          if (remoteState.lastUpdatedBy === getSessionId()) {
+            if (!$timerStore.get().hasSyncedOnce) {
+               $timerStore.setKey("hasSyncedOnce", true);
+            }
+            return;
+          }
+          updateTimerStateLocally({
+            mode: remoteState.mode,
+            isActive: remoteState.isActive,
+            timeLeft: remoteState.timeLeft,
+            lastUpdatedTimestamp: remoteState.lastUpdatedTimestamp
+          });
+        } else {
+          $timerStore.setKey("hasSyncedOnce", true);
         }
       });
+      return () => unsubscribe();
     }
-  }, [user, events]);
+  }, [user?.uid]);
 
-  const toggleTaskCompletion = async (taskId: string, currentStatus: boolean) => {
-    if (!user) return;
-    const newStatus = !currentStatus;
-    const updatedTasks = { ...completedTasks, [taskId]: newStatus };
-    setCompletedTasks(updatedTasks);
-    
-    // Save to Firestore
-    const today = new Date().toISOString().split("T")[0];
-    const docRef = doc(db, "users", user.uid, "completed_tasks", today);
-    await setDoc(docRef, updatedTasks, { merge: true });
+  // Broadcast Timer State changes (Sender)
+  useEffect(() => {
+    if (!user?.uid) return;
+    let lastKnownIsActive = $timerStore.get().isActive;
+    let lastKnownMode = $timerStore.get().mode;
+
+    const unsubscribe = $timerStore.subscribe((state) => {
+      if (!state.hasSyncedOnce) return;
+      const hasStateChanged = state.isActive !== lastKnownIsActive || state.mode !== lastKnownMode;
+      if (!getIsSyncingFromRemote() && hasStateChanged) {
+        lastKnownIsActive = state.isActive;
+        lastKnownMode = state.mode;
+        const timerRef = doc(db, "users", user.uid, "settings", "timer");
+        setDoc(timerRef, {
+          mode: state.mode,
+          isActive: state.isActive,
+          timeLeft: state.timeLeft,
+          lastUpdatedTimestamp: getSyncedNow(),
+          lastUpdatedBy: getSessionId()
+        }, { merge: true }).catch(err => console.error("Timer Sync: Broadcast failed", err));
+      }
+    });
+    return () => unsubscribe();
+  }, [user?.uid]);
+
+  // Sync events to store for auto-start heartbeat
+  useEffect(() => {
+    import("../../stores/timerStore").then(({ setEvents }) => {
+      setEvents(events);
+    });
+  }, [events]);
+
+  const addManualTask = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!newTaskText.trim() || !user) return;
+    try {
+      const tasksRef = collection(db, "users", user.uid, "manual_tasks");
+      await addDoc(tasksRef, {
+        text: newTaskText.trim(),
+        completed: false,
+        createdAt: Date.now(),
+      });
+      setNewTaskText("");
+    } catch (err) {
+      console.error("Manual Tasks: Add failed", err);
+    }
   };
+
+  const toggleManualTask = async (taskId: string, currentStatus: boolean) => {
+    if (!user) return;
+    try {
+      const docRef = doc(db, "users", user.uid, "manual_tasks", taskId);
+      await setDoc(docRef, { completed: !currentStatus }, { merge: true });
+    } catch (err) {
+      console.error("Manual Tasks: Toggle failed", err);
+    }
+  };
+
+  const deleteManualTask = async (taskId: string) => {
+    if (!user) return;
+    try {
+      const docRef = doc(db, "users", user.uid, "manual_tasks", taskId);
+      await deleteDoc(docRef);
+    } catch (err) {
+      console.error("Manual Tasks: Delete failed", err);
+    }
+  };
+
+  const handleToggleAutoSync = () => {
+    const newVal = !isAutoMode;
+    $timerStore.setKey("isAutoMode", newVal);
+    window.localStorage.setItem("isAutoMode", String(newVal));
+  };
+
+  const handleSoundSetting = (key: any, val: any) => {
+    import("../../stores/timerStore").then(({ updateSoundSetting }) => {
+      updateSoundSetting(key, val);
+    });
+  };
+
+  if (authLoading) {
+    return (
+      <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#020617] text-white">
+        <div className="flex flex-col items-center gap-8">
+          <div className="relative w-20 h-20 rounded-full border-4 border-white/10 flex items-center justify-center shadow-2xl bg-white/5 backdrop-blur-md">
+            {[...Array(12)].map((_, i) => (
+              <div key={i} className="absolute w-0.5 h-2 bg-white/20 rounded-full" style={{ transform: `rotate(${i * 30}deg) translateY(-32px)` }} />
+            ))}
+            <div className="absolute inset-0 flex items-center justify-center animate-clock-hand">
+              <div className="w-1 h-8 bg-white/80 rounded-full -translate-y-4" />
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center animate-clock-hand-fast">
+              <div className="w-1 h-6 bg-white/40 rounded-full -translate-y-3" />
+            </div>
+            <div className="w-2 h-2 bg-white rounded-full z-10 shadow-lg" />
+          </div>
+          <p className="text-white/70 font-black tracking-[0.4em] uppercase text-[10px] animate-pulse">Syncing Workspace</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center bg-gray-900 text-white p-10">
+      <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#020617] text-white p-10">
         <h2 className="text-4xl font-bold mb-4 tracking-tight">Focus Workspace</h2>
-        <p className="text-gray-400 mb-8 max-w-md text-center text-lg">
-          Sign in with Google to sync your calendar and start the Pomodoro session.
-        </p>
-        <button
-          onClick={loginWithGoogle}
-          className="flex items-center gap-3 px-8 py-4 bg-white text-gray-900 rounded-full font-bold text-lg hover:scale-105 transition-transform"
-        >
+        <p className="text-gray-400 mb-8 max-w-md text-center text-lg">Sign in with Google to sync your calendar and start the Pomodoro session.</p>
+        <button onClick={() => import("../../stores/authStore").then(m => m.loginWithGoogle())} className="flex items-center gap-3 px-8 py-4 bg-white text-gray-900 rounded-full font-bold text-lg hover:scale-105 transition-transform">
           Continue with Google
         </button>
       </div>
@@ -64,153 +248,78 @@ export const TaskDashboard: React.FC = () => {
   }
 
   const now = new Date();
-  const currentTask = events.find(e => now >= e.start && now <= e.end);
-  const upcomingTasks = events.filter(e => e.start > now);
-  
-  // Set global background color
-  const bgClass = mode === "focus" || mode === "idle" ? "bg-red-500" : "bg-blue-500";
-  
-  // Auto Start Logic if Auto mode is enabled
-  useEffect(() => {
-    if (isAutoMode && currentTask) {
-       import("../../stores/timerStore").then(({ setTimerFromEvent, startTimer }) => {
-           setTimerFromEvent(currentTask);
-           startTimer();
-       });
+  const currentTask = events.find((e) => now >= e.start && now <= e.end);
+  const upcomingTasks = events.filter((e) => e.start > now).sort((a, b) => a.start.getTime() - b.start.getTime());
+  const isFocus = (mode === "focus" || mode === "idle") && isActive;
+
+  // Background Style Calculation
+  let bgStyle: React.CSSProperties = {};
+  if (themeMode === "immersive") {
+    bgStyle = isFocus
+      ? { background: "radial-gradient(circle at 0% 0%, #450a0a 0%, transparent 60%), radial-gradient(circle at 100% 100%, #7f1d1d 0%, transparent 60%), radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%)" }
+      : { background: "radial-gradient(circle at 0% 0%, #1e1b4b 0%, transparent 60%), radial-gradient(circle at 100% 100%, #1e3a8a 0%, transparent 60%), radial-gradient(circle at 50% 50%, #020617 0%, #000000 100%)" };
+  } else if (themeMode === "minimal") {
+    bgStyle = isFocus ? { backgroundColor: "#f87171" } : { backgroundColor: "#475569" };
+  } else if (themeMode === "custom") {
+    const img = isFocus ? customFocusBg : customBreakBg || customFocusBg;
+    if (img) {
+      bgStyle = { backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(${img})`, backgroundSize: "cover", backgroundPosition: "center" };
+    } else {
+      bgStyle = { backgroundColor: "#111827" };
     }
-  }, [isAutoMode, currentTask]);
+  }
+
+  const transitionKey = `${themeMode}-${isFocus}-${isFocus ? customFocusBg : customBreakBg || customFocusBg}`;
 
   return (
-    <div className={`h-screen w-screen overflow-hidden flex flex-col transition-colors duration-700 ${bgClass} text-white`}>
-      
-      {/* Top Bar (Minimal Setup) */}
-      <div className="w-full flex justify-between items-center p-6 lg:p-10 absolute top-0 left-0 z-10 pointer-events-none">
-         <div className="flex items-center gap-4 pointer-events-auto">
-           <img 
-             src={user.photoURL || ""} 
-             alt="Profile" 
-             className="w-12 h-12 rounded-full border-2 border-white/30"
-           />
-           <div>
-             <h3 className="font-bold text-lg leading-tight">{user.displayName}</h3>
-             <button 
-               onClick={logout}
-               className="text-white/70 text-xs hover:text-white underline underline-offset-2 transition-colors mt-1"
-             >
-               Sign out
-             </button>
-           </div>
-         </div>
-      </div>
+    <div className="min-h-screen w-screen flex flex-col text-white relative selection:bg-white/20 overflow-x-hidden">
+      <BackgroundLayer themeMode={themeMode} isFocus={isFocus} bgStyle={bgStyle} transitionKey={transitionKey} />
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col lg:flex-row w-full items-center justify-center p-6 lg:p-10 relative z-0">
-        
-        {/* Left Column: Tasks Overlay */}
-        <div className="w-full lg:w-1/3 flex flex-col gap-8 lg:pr-10 z-10">
-          
-          <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/20">
-            <h2 className="text-2xl font-bold">Tasks</h2>
-            <label className="flex items-center gap-2 cursor-pointer text-sm font-medium">
-              <input 
-                type="checkbox" 
-                checked={isAutoMode}
-                onChange={() => {
-                   import("../../stores/timerStore").then(({ $timerStore }) => {
-                       $timerStore.setKey("isAutoMode", !isAutoMode);
-                   });
-                }}
-                className="w-4 h-4 rounded border-white/30 bg-white/10 text-blue-500 focus:ring-0 cursor-pointer"
-              />
-              Auto-Sync Calendar
-            </label>
+      <div className="relative z-10 flex flex-col min-h-screen w-full transform-gpu translate-z-0">
+        <ProfileMenu 
+          user={user}
+          isProfileOpen={isProfileOpen}
+          setIsProfileOpen={setIsProfileOpen}
+          isAutoMode={isAutoMode}
+          handleToggleAutoSync={handleToggleAutoSync}
+          setIsThemeModalOpen={setIsThemeModalOpen}
+          themeMode={themeMode}
+          soundEnabled={soundEnabled}
+          handleSoundSetting={handleSoundSetting}
+          tickEnabled={tickEnabled}
+          volume={volume}
+          logout={logout}
+        />
+
+        <div className="flex-1 flex flex-col lg:flex-row w-full items-start p-4 lg:p-8 relative z-20 gap-8 lg:gap-12">
+          <TaskSection 
+            manualTasks={manualTasks}
+            events={events}
+            isLoading={isLoading}
+            fetchError={fetchError}
+            newTaskText={newTaskText}
+            setNewTaskText={setNewTaskText}
+            addManualTask={addManualTask}
+            toggleManualTask={toggleManualTask}
+            deleteManualTask={deleteManualTask}
+            isFocus={isFocus}
+            currentTask={currentTask}
+            upcomingTasks={upcomingTasks}
+          />
+
+          <div className="flex-1 w-full flex items-center justify-center py-12 lg:py-0 min-h-[50vh] lg:min-h-0 order-1 lg:order-2 relative z-30">
+            <TimerApp />
           </div>
-
-          <div>
-             <h4 className="text-sm font-extrabold text-white uppercase tracking-widest mb-4 drop-shadow-sm">
-               Happening Now
-             </h4>
-             {currentTask ? (
-               <TaskItem 
-                  task={currentTask} 
-                  isCompleted={completedTasks[currentTask.id] || false}
-                  onToggle={() => toggleTaskCompletion(currentTask.id, completedTasks[currentTask.id] || false)}
-               />
-             ) : (
-               <div className="p-4 rounded-3xl bg-black/20 border border-white/20 text-white font-medium text-sm italic shadow-sm">
-                 No active event found on calendar right now.
-               </div>
-             )}
-          </div>
-
-          <div>
-             <h4 className="text-sm font-extrabold text-white uppercase tracking-widest mb-4 drop-shadow-sm">
-               Up Next
-             </h4>
-             <div className="space-y-3 max-h-[30vh] overflow-y-auto pr-2 custom-scrollbar">
-                {upcomingTasks.length > 0 ? (
-                  upcomingTasks.map(task => (
-                    <TaskItem 
-                        key={task.id} 
-                        task={task}
-                        isCompleted={completedTasks[task.id] || false}
-                        onToggle={() => toggleTaskCompletion(task.id, completedTasks[task.id] || false)}
-                    />
-                  ))
-                ) : (
-                  <p className="text-white font-medium italic text-sm p-2">Your calendar is clear.</p>
-                )}
-             </div>
-          </div>
-
         </div>
 
-        {/* Right Column: Timer App Centered */}
-        <div className="w-full lg:w-2/3 flex items-center justify-center mt-10 lg:mt-0 z-10">
-          <TimerApp />
-        </div>
-
+        <ThemeSettingsModal isOpen={isThemeModalOpen} onClose={() => setIsThemeModalOpen(false)} />
       </div>
 
-    </div>
-  );
-};
-
-// Sub-component for minimalist tasks overlay
-const TaskItem = ({ 
-  task, 
-  isCompleted, 
-  onToggle 
-}: { 
-  task: CalendarEvent; 
-  isCompleted: boolean; 
-  onToggle: () => void;
-}) => {
-  const formatTime = (date: Date) => 
-    date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-  return (
-    <div className={`flex items-start gap-4 p-5 rounded-3xl backdrop-blur-md border transition-all cursor-default shadow-sm ${
-        isCompleted ? "bg-black/40 border-white/10 opacity-70" : "bg-black/20 border-white/30 hover:bg-black/30"
-    }`}>
-      <button 
-        onClick={onToggle}
-        className={`mt-1 min-w-[28px] w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors ${
-          isCompleted ? "bg-white border-white text-black" : "border-white/40 hover:border-white text-transparent"
-        }`}
-      >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-        </svg>
-      </button>
-      <div className="flex-1">
-        <h5 className={`font-bold text-lg drop-shadow-sm ${isCompleted ? "line-through text-white/60" : "text-white"}`}>
-          {task.summary}
-        </h5>
-        <span className="text-sm text-white/90 font-mono mt-1 block tracking-tight font-medium">
-          {formatTime(task.start)} - {formatTime(task.end)}
-        </span>
-      </div>
+      <style>{`
+        @keyframes float-reveal { 0% { transform: translateY(20px) scale(0.9); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: inherit; } }
+        @keyframes float-drift { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-30px) rotate(15deg); } }
+        .animate-float-reveal { animation: float-reveal 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards, float-drift 8s ease-in-out infinite alternate 1.5s; }
+      `}</style>
     </div>
   );
 };
