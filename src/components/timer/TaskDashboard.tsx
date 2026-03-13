@@ -272,7 +272,7 @@ export const TaskDashboard: React.FC = () => {
   const transitionKey = `${themeMode}-${isFocus}-${isFocus ? customFocusBg : customBreakBg || customFocusBg}`;
 
   return (
-    <div className="min-h-screen w-screen flex flex-col text-white relative selection:bg-white/20 overflow-x-hidden">
+    <div className="min-h-screen w-screen flex flex-col text-white relative selection:bg-white/20 overflow-x-hidden border-none isolate">
       <BackgroundLayer themeMode={themeMode} isFocus={isFocus} bgStyle={bgStyle} transitionKey={transitionKey} />
 
       <div className="relative z-10 flex flex-col min-h-screen w-full transform-gpu translate-z-0">

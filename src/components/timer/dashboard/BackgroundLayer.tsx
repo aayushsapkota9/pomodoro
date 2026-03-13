@@ -16,12 +16,12 @@ export const BackgroundLayer: React.FC<BackgroundLayerProps> = ({
   return (
     <>
       {/* Layer 1: The Basement - Background Color */}
-      <div className="fixed inset-0 bg-[#020617] -z-50" />
+      <div className="fixed inset-0 bg-[#020617] z-0" />
 
       {/* Layer 2: The Background Icons & Gradients */}
       <div
         key={transitionKey}
-        className="fixed inset-0 transition-opacity duration-1000 animate-in fade-in fill-mode-forwards -z-10 overflow-hidden pointer-events-none"
+        className="fixed inset-0 transition-opacity duration-1000 animate-in fade-in fill-mode-forwards z-5 overflow-hidden pointer-events-none"
         style={bgStyle}>
         {/* Dynamic Background Particles & Icons (Only for Immersive) */}
         {themeMode === "immersive" && (
