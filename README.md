@@ -17,11 +17,9 @@ Focus Workspace is a refined, mechanical-themed Pomodoro timer designed for deep
 
 ## 🖼️ Themes
 
-````carousel
-![Dashboard Immersive](./public/screenshots/dashboard_immersive.png)
-<!-- slide -->
-![Dashboard Minimal](./public/screenshots/dashboard_minimal.png)
-````
+| Immersive | Minimal |
+| :---: | :---: |
+| ![Dashboard Immersive](./public/screenshots/dashboard_immersive.png) | ![Dashboard Minimal](./public/screenshots/dashboard_minimal.png) |
 
 ---
 
@@ -84,4 +82,4 @@ Open [http://localhost:4321](http://localhost:4321) in your browser.
 - **Calendar**: Google Calendar API
 
 ## 📝 License
-Built with ❤️ by Aayush Sapkota. Licensed under MIT.
+Built with ❤️ by Aayush Sapkota. Licensed under [GNU GPLv3](./LICENSE).
