@@ -54,7 +54,7 @@ export const TimerApp: React.FC = () => {
           {!isActive ? (
             <button
               onClick={startTimer}
-              disabled={isAutoMode}
+              disabled={isAutoMode && !isGuest}
               className={`w-full sm:w-auto px-10 sm:px-12 py-4 sm:py-5 rounded-full font-black text-xl sm:text-2xl transition-all shadow-xl active:scale-95 ${
                 (isAutoMode && !isGuest) 
                   ? "bg-white/5 text-white/30 cursor-not-allowed border border-white/10" 
@@ -66,7 +66,7 @@ export const TimerApp: React.FC = () => {
           ) : (
             <button
               onClick={() => pauseTimer()}
-              disabled={isAutoMode}
+              disabled={isAutoMode && !isGuest}
               className={`w-full sm:w-auto px-10 sm:px-12 py-4 sm:py-5 rounded-full font-black text-xl sm:text-2xl transition-all backdrop-blur-md shadow-xl active:scale-95 ${
                 (isAutoMode && !isGuest) 
                   ? "bg-white/5 text-white/30 cursor-not-allowed border border-white/10" 
