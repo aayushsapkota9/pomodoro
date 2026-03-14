@@ -2,7 +2,7 @@
 
 Focus Workspace is a refined, mechanical-themed Pomodoro timer designed for deep work. It seamlessly integrates with your **Google Calendar** to automatically setup your focus sessions based on your daily schedule.
 
-![Landing Page](file:///Users/aayushsapkota9/.gemini/antigravity/brain/bc7aefb2-2379-4dc6-94bf-014139e62eab/landing_page_1773467253012.png)
+![Landing Page](./public/screenshots/landing_page.png)
 
 ## ✨ Features
 
@@ -18,9 +18,9 @@ Focus Workspace is a refined, mechanical-themed Pomodoro timer designed for deep
 ## 🖼️ Themes
 
 ````carousel
-![Dashboard Immersive](file:///Users/aayushsapkota9/.gemini/antigravity/brain/bc7aefb2-2379-4dc6-94bf-014139e62eab/dashboard_immersive_1773467270204.png)
+![Dashboard Immersive](./public/screenshots/dashboard_immersive.png)
 <!-- slide -->
-![Dashboard Minimal](file:///Users/aayushsapkota9/.gemini/antigravity/brain/bc7aefb2-2379-4dc6-94bf-014139e62eab/dashboard_minimal_1773467310210.png)
+![Dashboard Minimal](./public/screenshots/dashboard_minimal.png)
 ````
 
 ---
