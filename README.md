@@ -1,166 +1,87 @@
-# Astroship - Astro SAAS Starter Website Template
+# Focus Workspace - Mechanical Pomodoro
 
-Astroship is a free starter astro website template for saas, startups, marketing websites, landing pages & blogs. Built with Astro & TailwindCSS.
+Focus Workspace is a refined, mechanical-themed Pomodoro timer designed for deep work. It seamlessly integrates with your **Google Calendar** to automatically setup your focus sessions based on your daily schedule.
 
-This Free Template is sponsored by [Web3Templates](https://web3templates.com)
+![Landing Page](file:///Users/aayushsapkota9/.gemini/antigravity/brain/bc7aefb2-2379-4dc6-94bf-014139e62eab/landing_page_1773467253012.png)
 
-## Live Demo
+## ✨ Features
 
-**[https://astroship.web3templates.com/](https://astroship.web3templates.com/)**
+- 🔄 **Auto Sync**: Automatically structure your Pomodoro sessions based on your Google Calendar events.
+- 🕰️ **Mechanical Aesthetic**: A premium, high-fidelity UI with immersive animations and soundscapes.
+- 🎨 **Multiple Themes**:
+    - **Immersive**: Deep gradients and atmospheric depth.
+    - **Minimal**: Clean, high-contrast focus.
+- 👥 **Guest Mode**: Start focusing immediately without an account.
+- ✅ **Task Management**: Keep track of manual todos alongside your calendar schedule.
+- 🔔 **Smart Alerts**: Interactive "Still there?" presence checks to keep you on track.
 
-**[Download Astroship Template](https://web3templates.com/templates/astroship-starter-website-template-for-astro)**
+## 🖼️ Themes
 
-## Upgrade to Astroship Pro Version
+````carousel
+![Dashboard Immersive](file:///Users/aayushsapkota9/.gemini/antigravity/brain/bc7aefb2-2379-4dc6-94bf-014139e62eab/dashboard_immersive_1773467270204.png)
+<!-- slide -->
+![Dashboard Minimal](file:///Users/aayushsapkota9/.gemini/antigravity/brain/bc7aefb2-2379-4dc6-94bf-014139e62eab/dashboard_minimal_1773467310210.png)
+````
 
-**[https://astroship-pro.web3templates.com/](https://astroship-pro.web3templates.com/)**
+---
 
-**[Purchase Astroship Pro — $49](https://web3templates.com/templates/astroship-pro-astro-saas-website-template)**
+## 🚀 Setup Instructions
 
+### 1. Prerequisites
+- [Node.js](https://nodejs.org/) (v18+)
+- [pnpm](https://pnpm.io/) (recommended)
 
-<!-- prettier-ignore -->
-| Feature | Free Version | Pro Version |
-| --- | ------ | --- |
-| Astro v3 | ✅  | ✅ |
-| Content Collections | ✅  | ✅ |
-| Tailwind CSS   | ✅  | ✅ |
-| Mobile Responsive | ✅  | ✅ |
-| Working Contact Page | ✅  | ✅ |
-| Pro Layouts & Features | ❌  | ✅ |
-| Blog with Pagination | ❌ | ✅ |
-| View Transitions | ❌ | ✅ |
-| Advanced Homepage Design | ❌  | ✅ |
-| Features Page | ❌  | ✅ |
-| Integrations Page | ❌  | ✅ |
-| Elegant 404 Page | ❌  | ✅ |
-| 6 Months Support| ❌  | ✅  |
-| Free Updates    | ✅  | ✅  |
-| License         | GPL-2.0 | Commercial |
-| &nbsp; | &nbsp;| &nbsp;|
-| Pricing| Free|**$49**|
-| &nbsp; | [Deploy for free](https://vercel.com/new/surjithctly/clone?demo-description=Starter%20template%20for%20startups%2C%20marketing%20websites%20%26%20blogs%20built%20with%20Astro%20and%20TailwindCSS.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F5dB0dDqBr1BfvIoNOmffVB%2F784984a8d3fe5e3db123e7c655166046%2Fastroship_-_Tony_Sullivan.jpg&demo-title=Astroship&demo-url=https%3A%2F%2Fastroship.web3templates.com%2F&from=templates&project-name=Astroship&repository-name=astroship&repository-url=https%3A%2F%2Fgithub.com%2Fsurjithctly%2Fastroship&skippable-integrations=1) | [Purchase Pro](https://web3templates.com/templates/astroship-pro-astro-saas-website-template) |
-
-<a href="https://web3templates.com/templates/astroship-pro-astro-saas-website-template">
-<img width="160" alt="Upgrade to Pro" src="https://user-images.githubusercontent.com/1884712/199181300-37c2128e-d033-4145-a906-16fa5263a53b.png">
-</a>
-
-## Deploy this template
-
-You can instantly clone this to your GitHub and deploy the site by clicking the below buttons to deploy to your chosen providers!
-
-Click here to deploy on Vercel:
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fsurjithctly%2Fastroship&project-name=astroship&repository-name=astroship&demo-title=Astroship%20-%20Astro%20Starter%20Template&demo-description=Astroship%20is%20a%20starter%20template%20for%20startups%2C%20marketing%20websites%20%26%20landing%20pages.%20Built%20with%20Astro%2C%20TailwindCSS&demo-url=https%3A%2F%2Fastroship.web3templates.com%2F&demo-image=https%3A%2F%2Fuser-images.githubusercontent.com%2F1884712%2F200831799-10ef2456-a02e-4068-b580-4b5326f0b33b.png)
-
-Click here to deploy on Netlify:
-
-[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/surjithctly/astroship)
-
-## Preview
-
-![image](https://user-images.githubusercontent.com/1884712/200831799-10ef2456-a02e-4068-b580-4b5326f0b33b.png)
-
-
-## Pro Version Preview
-
-![preview](https://github.com/surjithctly/astroship/assets/1884712/25665c02-d2a7-43dc-89b2-34a8ae37ade9)
-
-
-### Pagespeed Score
-
-[![pagespeed](https://user-images.githubusercontent.com/1884712/210250214-7aa98167-7993-4b90-8138-326b8fa0c223.png)](https://pagespeed.web.dev/report?url=https%3A%2F%2Fastroship.web3templates.com%2F)
-
-
-## Installation
-
-If you are reading this on github, you can click on the "Use this template" button above to create a new repository from astroship to your account. Then you can do a `git clone` to clone it to your local system.
-
-Alternatively, you can clone the project directly from this repo to your local system.
-
-### 1. Clone the repo
-
+### 2. Installation
 ```bash
-git clone https://github.com/surjithctly/astroship.git myProjectName
-# or
-git clone https://github.com/surjithctly/astroship.git .
-```
-
-The `.` will clone it to the current directory so make sure you are inside your project folder first.
-
-### 2. Install Dependencies
-
-```bash
-npm install
-# or
-yarn install
-# or (recommended)
+git clone <your-repo-url>
+cd pomodoro-calendar
 pnpm install
 ```
 
-### 3. Start development Server
+### 3. Firebase Setup
+To enable authentication and data sync, you need a Firebase project:
 
+1.  Go to the [Firebase Console](https://console.firebase.google.com/).
+2.  Create a new project named `Focus Workspace`.
+3.  **Authentication**: Enable **Google** sign-in provider.
+4.  **Firestore Database**: Create a database in **Production Mode** (or test mode, but update rules later).
+5.  **Project Settings**: Add a "Web App" and copy the `firebaseConfig` keys.
+
+### 4. Google Calendar API Setup
+1.  Go to the [Google Cloud Console](https://console.cloud.google.com/).
+2.  Select your Firebase project.
+3.  Enable the **Google Calendar API**.
+4.  Configure the **OAuth consent screen** and add the following scopes:
+    - `https://www.googleapis.com/auth/calendar.readonly`
+    - `https://www.googleapis.com/auth/calendar.events.readonly`
+
+### 5. Environment Variables
+Create a `.env` file in the root directory and fill in your Firebase credentials:
+
+```env
+PUBLIC_FIREBASE_API_KEY=your_api_key
+PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+PUBLIC_FIREBASE_APP_ID=your_app_id
+PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id
+```
+
+### 6. Run the App
 ```bash
-npm run dev
-# or
-yarn dev
-# or (recommended)
 pnpm dev
 ```
+Open [http://localhost:4321](http://localhost:4321) in your browser.
 
-### Preview & Build
+---
 
-```bash
-npm run preview
-npm run build
-# or
-yarn preview
-yarn build
-# or (recommended)
-pnpm preview
-pnpm build
-```
+## 🛠️ Tech Stack
+- **Framework**: [Astro](https://astro.build/)
+- **UI Architecture**: React + [Nanostores](https://github.com/nanostores/nanostores)
+- **Styling**: TailwindCSS
+- **Backend**: Firebase (Auth & Firestore)
+- **Calendar**: Google Calendar API
 
-We recommend using [pnpm](https://pnpm.io/) to save disk space on your computer.
-
-### Other Commands
-
-```bash
-pnpm astro ...
-pnpm astro add
-pnpm astro --help
-```
-
-## Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```
-/
-├── public/
-│   └── ...
-├── src/
-│   ├── components/
-│   │   └── ...
-│   ├── layouts/
-│   │   └── ...
-│   └── pages/
-│       └── ...
-└── package.json
-```
-
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## TailwindCSS
-
-TailwindCSS is already configured in this repo, so you can start using it without any installation.
-
-## Credits
-
-[Hero Illustration](https://www.figma.com/community/file/1108400791662599811) by [Streamline](https://www.streamlinehq.com/)
-
-## 👀 Want to learn more?
-
-Feel free to check out [Astro Docs](https://docs.astro.build) or jump into our [Discord Chat](https://web3templates.com/discord).
-
-[![Built with Astro](https://astro.badg.es/v1/built-with-astro.svg)](https://astro.build)
+## 📝 License
+Built with ❤️ by Aayush Sapkota. Licensed under MIT.
