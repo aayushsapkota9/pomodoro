@@ -358,7 +358,7 @@ export const TaskDashboard: React.FC = () => {
 
           {/* Bottom Content Layer */}
           <div className="w-full grid grid-cols-1 md:grid-cols-12 gap-12 items-end mb-32">
-            <div className="md:col-span-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500">
+            <div className="md:col-span-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500">
               <div className="w-px h-24 bg-white/20 mb-8" />
               <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-2">
@@ -368,6 +368,16 @@ export const TaskDashboard: React.FC = () => {
                      synchronized with your digital rhythm.
                    </p>
                 </div>
+              </div>
+            </div>
+
+            <div className="md:col-span-6 flex flex-col items-end text-right animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-700">
+              <div className="w-px h-24 bg-white/20 mb-8" />
+              <div className="flex flex-col gap-2">
+                 <h2 className="text-xl font-bold text-white">Auto Sync</h2>
+                 <p className="text-white/40 text-[11px] leading-relaxed max-w-70">
+                   Auto setup pomodoro based on your Google Calendar.
+                 </p>
               </div>
             </div>
           </div>
