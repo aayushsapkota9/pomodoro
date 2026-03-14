@@ -31,7 +31,7 @@ Focus Workspace is a refined, mechanical-themed Pomodoro timer designed for deep
 
 ### 2. Installation
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/aayushsapkota9/pomodoro.git
 cd pomodoro-calendar
 pnpm install
 ```
