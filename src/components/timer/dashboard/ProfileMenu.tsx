@@ -86,7 +86,7 @@ export const ProfileMenu: React.FC<ProfileMenuProps> = ({
                 <input
                   type="checkbox"
                   disabled={isGuest}
-                  checked={isAutoMode}
+                  checked={isGuest ? false : isAutoMode}
                   onChange={handleToggleAutoSync}
                   className={`w-4 h-4 rounded border-white/30 bg-white/10 text-blue-500 focus:ring-0 cursor-pointer ${isGuest ? "opacity-30 cursor-not-allowed" : ""}`}
                 />
