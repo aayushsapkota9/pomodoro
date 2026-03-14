@@ -14,7 +14,7 @@ import { fetchTodayEvents, getActiveEvent } from "../../lib/calendar";
 export const TimerApp: React.FC = () => {
   const { mode, timeLeft, isActive, showPresenceCheck, presenceCheckTimeout, isAutoMode } =
     useStore($timerStore);
-  const { calendarAccessToken } = useStore($authStore);
+  const { calendarAccessToken, isGuest } = useStore($authStore);
 
   // Sync with calendar event initially
   useEffect(() => {
@@ -56,32 +56,32 @@ export const TimerApp: React.FC = () => {
               onClick={startTimer}
               disabled={isAutoMode}
               className={`w-full sm:w-auto px-10 sm:px-12 py-4 sm:py-5 rounded-full font-black text-xl sm:text-2xl transition-all shadow-xl active:scale-95 ${
-                isAutoMode 
+                (isAutoMode && !isGuest) 
                   ? "bg-white/5 text-white/30 cursor-not-allowed border border-white/10" 
                   : "bg-white text-gray-900 hover:scale-105"
               }`}
             >
-              {isAutoMode ? "System Sync" : "Start Timer"}
+              {(isAutoMode && !isGuest) ? "System Sync" : "Start Timer"}
             </button>
           ) : (
             <button
-              onClick={pauseTimer}
+              onClick={() => pauseTimer()}
               disabled={isAutoMode}
               className={`w-full sm:w-auto px-10 sm:px-12 py-4 sm:py-5 rounded-full font-black text-xl sm:text-2xl transition-all backdrop-blur-md shadow-xl active:scale-95 ${
-                isAutoMode 
+                (isAutoMode && !isGuest) 
                   ? "bg-white/5 text-white/30 cursor-not-allowed border border-white/10" 
                   : "bg-white/20 hover:bg-white/30 text-white ring-1 ring-white/20"
               }`}
             >
-              {isAutoMode ? "Auto Running" : "Pause Focus"}
+              {(isAutoMode && !isGuest) ? "Auto Running" : "Pause Focus"}
             </button>
           )}
 
           <button
             onClick={stopTimer}
-            disabled={isAutoMode && isActive}
+            disabled={isAutoMode && !isGuest && isActive}
             className={`w-full sm:w-auto px-8 py-3 sm:py-4 bg-transparent border-2 rounded-full font-black text-base sm:text-lg transition-all active:scale-95 ${
-              isAutoMode && isActive
+              isAutoMode && !isGuest && isActive
                 ? "border-white/10 text-white/20 cursor-not-allowed"
                 : "border-white/30 hover:border-white hover:bg-white/5 text-white"
             }`}

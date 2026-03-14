@@ -281,7 +281,9 @@ export const TaskDashboard: React.FC = () => {
             </div>
             <div className="w-2 h-2 bg-white rounded-full z-10 shadow-lg" />
           </div>
-          <p className="text-white/70 font-black tracking-[0.4em] uppercase text-[10px] animate-pulse">Syncing Workspace</p>
+          <p className="text-white/70 font-black tracking-[0.4em] uppercase text-[10px] animate-pulse">
+            {isGuest ? "Loading Workspace" : "Syncing Workspace"}
+          </p>
         </div>
       </div>
     );
